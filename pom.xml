@@ -26,6 +26,16 @@
             <artifactId>aws-java-sdk-sqs</artifactId>
             <version>1.11.462</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>2.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.8</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
