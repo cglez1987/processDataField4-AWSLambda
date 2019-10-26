@@ -12,6 +12,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.dcarlidev.processdatafromfield4.model.MT103;
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
 /**
@@ -19,25 +20,28 @@ import javax.persistence.Persistence;
  * @author carlos
  */
 public class MyHandler {
-
+    
     private LambdaLogger logger;
     private final EntityManager entityManager = Persistence.createEntityManagerFactory("ProcessDataFromField4_PU").createEntityManager();
-
+    private int invocation = 0;
+    
     public MyHandler() {
-
+        
     }
-
+    
     public void handler(SQSEvent event, Context context) {
         logger = context.getLogger();
-        logger.log("Starting with extraction of data from SQSEvent");
+        logger.log("Starting with extraction of data from SQSEvent " + invocation);
+        invocation++;
         List<SQSMessage> messages = event.getRecords();
-        messages.stream().parallel().forEach(this::processMessage);
+        logger.log("Size of records: " + messages.size());
+        messages.stream().forEach(this::processMessage);
     }
-
+    
     private void processMessage(SQSMessage message) {
-        logger.log("Message ID: " + message.getMessageId());
+//        logger.log("Message ID: " + message.getMessageId());
         String body = message.getBody();
-        logger.log("Body: " + body);
+//        logger.log("Body: " + body);
         String[] lines = body.replaceAll("\t", "").trim().split("\n:");
         MT103 mt103 = new MT103();
         for (String line : lines) {
@@ -64,57 +68,60 @@ public class MyHandler {
                     getField86(line, mt103);
             }
         }
-        logger.log("Comenzando a insertar " + message.getMessageId());
-        entityManager.getTransaction().begin();
+        logger.log("Comenzando a insertar " + mt103.getField20());
+        EntityTransaction tx = entityManager.getTransaction();
+        if (!tx.isActive()) {
+            tx.begin();
+        }
         entityManager.persist(mt103);
-        entityManager.getTransaction().commit();
-        logger.log("Termino de insertar " + message.getMessageId());
+        tx.commit();
+        logger.log("Termino de insertar " + mt103.getField20());
     }
-
+    
     private void getField20(String line, MT103 mt103) {
         String field20 = line.substring(4);
         mt103.setField20(field20);
     }
-
+    
     private void getField21(String line, MT103 mt103) {
         String field21 = line.substring(3);
         mt103.setField21(field21);
     }
-
+    
     private void getField25(String line, MT103 mt103) {
         String field25 = line.substring(3);
         mt103.setField25(field25);
     }
-
+    
     private void getField28(String line, MT103 mt103) {
         String field28 = line.substring(4);
         mt103.setField28(field28);
     }
-
+    
     private void getField60(String line, MT103 mt103) {
         String field60 = line.substring(4);
         mt103.setField60(field60);
     }
-
+    
     private void getField61(String line, MT103 mt103) {
         mt103.setField61(line);
     }
-
+    
     private void getField62(String line, MT103 mt103) {
         String field62 = line.substring(3);
         mt103.setField62(field62);
     }
-
+    
     private void getField64(String line, MT103 mt103) {
         String field64 = line.substring(3);
         mt103.setField64(field64);
     }
-
+    
     private void getField86(String line, MT103 mt103) {
         String field86 = line.substring(3);
         mt103.setField86(field86);
     }
-
+    
     public static void main(String... args) {
         MyHandler myh = new MyHandler();
         SQSMessage message = new SQSMessage();
@@ -130,5 +137,5 @@ public class MyHandler {
                 + "		:86:Wyci?g nr: 143 z dnia: 2019-10-14");
         myh.processMessage(message);
     }
-
+    
 }
