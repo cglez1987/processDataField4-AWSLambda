@@ -46,9 +46,7 @@ public class MyHandler {
     }
 
     private void processMessage(SQSMessage message) {
-//        logger.log("Message ID: " + message.getMessageId());
         String body = message.getBody();
-//        logger.log("Body: " + body);
         String[] lines = body.replaceAll("\t", "").trim().split("\n:");
         MT103 mt103 = new MT103();
         for (String line : lines) {
